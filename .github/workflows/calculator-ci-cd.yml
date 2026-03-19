@@ -1,0 +1,50 @@
+name: CI/CD - Advanced Calculator
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  # ✅ Run Tests
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Tests
+        run: pytest
+
+  # 🐳 Build & Push Docker Image
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/advanced-calculator:latest .
+
+      - name: Push Image
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/advanced-calculator:latest
